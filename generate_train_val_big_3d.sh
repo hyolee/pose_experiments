@@ -1,0 +1,350 @@
+#!/bin/sh
+
+nClass=$1
+
+cat << EOF
+name: "AlexNet"
+layers {
+  name: "data"
+  #type: HDF5_DATA
+  type: IMAGE_DATA
+  top: "data"
+  top: "old_label"
+  image_data_param {
+    source: "/om/user/hyo/caffe/reg/train_class${nClass}_3d.txt"
+    batch_size: 256
+  }
+  transform_param {
+    crop_size: 227
+    mean_file: "/om/user/hyo/caffe/imagenet_mean.binaryproto"
+    mirror: false
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "label"
+  type: HDF5_DATA
+  top: "label"
+  top: "label2"
+  top: "label3"
+  top: "label4"
+  top: "label5"
+  top: "label6"
+  hdf5_data_param {
+    source: "/om/user/hyo/caffe/reg/hdf5_reg_train_label_class${nClass}_3d.txt"
+    batch_size: 256
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  #type: HDF5_DATA
+  type: IMAGE_DATA
+  top: "data"
+  top: "old_label"
+  image_data_param {
+    source: "/om/user/hyo/caffe/reg/test_class${nClass}_3d.txt"
+    batch_size: 50
+  }
+  transform_param {
+    crop_size: 227
+    mean_file: "/om/user/hyo/caffe/imagenet_mean.binaryproto"
+    mirror: false
+  }
+  include: { phase: TEST }
+}
+layers {
+  name: "label"
+  type: HDF5_DATA
+  top: "label"
+  top: "label2"
+  top: "label3"
+  top: "label4"
+  top: "label5"
+  top: "label6"
+  hdf5_data_param {
+    source: "/om/user/hyo/caffe/reg/hdf5_reg_test_label_class${nClass}_3d.txt"
+    batch_size: 50
+  }
+  include: { phase: TEST }
+}
+
+layers {
+  name: "silence"
+  type: SILENCE
+  bottom: "old_label"
+}
+#layers {
+#  name: "debug"
+#  type: CONVOLUTION
+#  bottom: "data"
+#  convolution_param {
+#    num_output: 1
+#    kernel_size: 227
+#    weight_filler {
+#      type: "constant"
+#      value: 1
+#    }	     
+#  }		    
+#  top: "debug"
+#}
+layers {
+  name: "conv1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 96
+    kernel_size: 11
+    stride: 4
+    weight_filler {
+      type: "xavier"
+      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "relu1"
+  type: RELU
+  bottom: "conv1"
+  top: "conv1"
+}
+layers {
+  name: "pool1"
+  type: POOLING
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layers {
+  name: "conv2"
+  type: CONVOLUTION
+  bottom: "pool1"
+  top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    group: 2
+    weight_filler {
+      type: "xavier"
+      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layers {
+  name: "relu2"
+  type: RELU
+  bottom: "conv2"
+  top: "conv2"
+}
+layers {
+  name: "pool2"
+  type: POOLING
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layers {
+  name: "conv3"
+  type: CONVOLUTION
+  bottom: "pool2"
+  top: "conv3"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "relu3"
+  type: RELU
+  bottom: "conv3"
+  top: "conv3"
+}
+layers {
+  name: "conv4"
+  type: CONVOLUTION
+  bottom: "conv3"
+  top: "conv4"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 2
+    weight_filler {
+      type: "xavier"
+      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layers {
+  name: "relu4"
+  type: RELU
+  bottom: "conv4"
+  top: "conv4"
+}
+layers {
+  name: "conv5"
+  type: CONVOLUTION
+  bottom: "conv4"
+  top: "conv5"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    group: 2
+    weight_filler {
+      type: "xavier"
+      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layers {
+  name: "relu5"
+  type: RELU
+  bottom: "conv5"
+  top: "conv5"
+}
+layers {
+  name: "pool5"
+  type: POOLING
+  bottom: "conv5"
+  top: "pool5"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layers {
+  name: "fc6"
+  type: INNER_PRODUCT
+  bottom: "pool5"
+  top: "fc6"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "xavier"
+      #std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layers {
+  name: "relu6"
+  type: RELU
+  bottom: "fc6"
+  top: "fc6"
+}
+layers {
+  name: "fc7"
+  type: INNER_PRODUCT
+  bottom: "fc6"
+  top: "fc7"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+       type: "xavier"
+#      type: "xavier"
+#      #std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layers {
+  name: "relu7"
+  type: RELU
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  name: "fc_pose"
+  type: INNER_PRODUCT
+  bottom: "fc7"
+  top: "fc_pose"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
+    num_output: 6
+    weight_filler {
+       type: "xavier"
+#      #std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "label_vec"
+  type: CONCAT
+  bottom: "label"
+  bottom: "label2"
+  bottom: "label3"
+  bottom: "label4"
+  bottom: "label5"
+  bottom: "label6"
+  top: "label_vec"
+}
+layers {
+  name: "loss"
+  type: EUCLIDEAN_LOSS
+  bottom: "fc_pose"
+  bottom: "label_vec"
+  top: "loss"
+}
+EOF
